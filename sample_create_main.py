@@ -181,7 +181,10 @@ if __name__ == '__main__':
     #  将影像按照矢量道路交叉口点进行裁剪，自动生成训练集
     logging.basicConfig(level=logging.INFO)
     tif_handle = TIF_HANDLE(path=TIF_PATH, save_path=TRAIN_PATH)
-    del_file(TRAIN_PATH)
+    if 'train' in os.listdir('./'):
+        del_file(TRAIN_PATH)
+    else:
+        os.makedirs('train')
     shp_handle = SHP_HANDLE(shp_path=SHP_PATH, via_region_data=VIA_REGION_DATA, road_window_size=ROAD_WINDOW_SIZE)
     shp_handle.creaate_train_sample(tif_handle=tif_handle, crop_size=CROP_SIZE)
     if 'val' not in os.listdir('./'):
