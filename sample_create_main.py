@@ -188,4 +188,5 @@ if __name__ == '__main__':
     shp_handle = SHP_HANDLE(shp_path=SHP_PATH, via_region_data=VIA_REGION_DATA, road_window_size=ROAD_WINDOW_SIZE)
     shp_handle.creaate_train_sample(tif_handle=tif_handle, crop_size=CROP_SIZE)
     if 'val' not in os.listdir('./'):
+        os.makedirs('val')
         get_val()
