@@ -21,6 +21,7 @@ CUR_PATH = r'./'
 TIF_PATH = os.path.join(CUR_PATH, r'tif_and_shp/CJ2.tif')
 SHP_PATH = os.path.join(CUR_PATH, r'tif_and_shp/point/Correction.shp')
 TRAIN_PATH = os.path.join(CUR_PATH, r'train')
+VAL_PATH = os.path.join(CUR_PATH, r'val')
 CROP_SIZE = 400
 ROAD_WINDOW_SIZE = 64
 VIA_REGION_DATA = 'via_region_data.json'
@@ -88,7 +89,7 @@ class TIF_HANDLE(object):
         img = dataset_img.ReadAsArray(0, 0, width, height)  # 获取数据
 
         #  获取当前文件夹的文件个数len,并以len+1命名即将裁剪得到的图像
-        new_name = '{}_{}_{}.bmp'.format(self.image_num, int(x), int(y))
+        new_name = '{}_{}_{}.jpg'.format(self.image_num, int(x), int(y))
         #  裁剪图片,重复率为RepetitionRate
         x_min, x_max = x - x_df, x + crop_size - x_df
         y_min, y_max = y - y_df, y + crop_size - y_df
@@ -135,6 +136,7 @@ class SHP_HANDLE(object):
         with open(train_out_path, 'w') as f:
             json.dump(self.train_json, f)
 
+
     def add_train_json(self, row, col, crop_size, raster_name):
         size = crop_size * crop_size
         geo_id = '{}_{}'.format(raster_name, size)
@@ -169,6 +171,11 @@ def del_file(path_data):
         else:
             del_file(file_data)
 
+def get_val():
+    tif_handle = TIF_HANDLE(path=TIF_PATH, save_path=VAL_PATH)
+    del_file(VAL_PATH)
+    shp_handle = SHP_HANDLE(shp_path=SHP_PATH, via_region_data=VIA_REGION_DATA, road_window_size=ROAD_WINDOW_SIZE)
+    shp_handle.creaate_train_sample(tif_handle=tif_handle, crop_size=CROP_SIZE)
 
 if __name__ == '__main__':
     #  将影像按照矢量道路交叉口点进行裁剪，自动生成训练集
@@ -177,3 +184,5 @@ if __name__ == '__main__':
     del_file(TRAIN_PATH)
     shp_handle = SHP_HANDLE(shp_path=SHP_PATH, via_region_data=VIA_REGION_DATA, road_window_size=ROAD_WINDOW_SIZE)
     shp_handle.creaate_train_sample(tif_handle=tif_handle, crop_size=CROP_SIZE)
+    if 'val' not in os.listdir('./'):
+        get_val()
