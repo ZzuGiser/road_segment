@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
 # -*- coding:utf-8 -*-
 # @File  : road_accuracy.py
 # @Author: shao
@@ -77,6 +77,7 @@ class Road_Accuracy(object):
         self.filter_patch_res_path = os.path.join(output_path, 'a_filter_patch_res.csv')
         self.culster_png = os.path.join(output_path, 'a_Clustering.png')
         self.culster_csv = os.path.join(output_path, 'a_Clustering.csv')
+        self.img_num = 1
 
     def imagexy2geo(self, row, col):
         '''
@@ -112,7 +113,7 @@ class Road_Accuracy(object):
         img = dataset_img.ReadAsArray(0, 0, width, height)  # 获取数据
 
         #  获取当前文件夹的文件个数len,并以len+1命名即将裁剪得到的图像
-        new_name = '{}_{}.jpg'.format(int(x), int(y))
+        new_name = '{}_{}_{}.jpg'.format(self.img_num,int(x), int(y))
         #  裁剪图片,重复率为RepetitionRate
         x_min, x_max = x - x_df, x + crop_size - x_df
         y_min, y_max = y - y_df, y + crop_size - y_df
@@ -183,8 +184,8 @@ class Road_Accuracy(object):
         visualize.save_instances(image, r['rois'], r['masks'], r['class_ids'],
                                  self.class_names, r['scores'], save_name=image_name, save_path=ouput_path)
         dis, offset_xy, is_real = self.center_point(r['rois'], w, h)
-        m = re.match(r'(\d+)_(\d+).jpg', image_name)
-        row_point, col_point = int(m.group(1)), int(m.group(2))
+        m = re.match(r'(\d+)_(\d+)_(\d+).jpg', image_name)
+        row_point, col_point = int(m.group(2)), int(m.group(3))
         x_before, y_before = self.imagexy2geo(row_point, col_point)
         x_after, y_after = self.imagexy2geo(row_point + offset_xy[0], col_point + offset_xy[1])
         temp = [offset_xy[0], offset_xy[1], dis, x_before, y_before, x_after, y_after, is_real, img_path]
