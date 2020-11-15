@@ -10,7 +10,11 @@ result/
 tif_and_shp/
 train/
 val/
-
+train_building/
+val_building/
+train_road/
+val_road/
+via-2.0.8/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

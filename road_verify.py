@@ -18,7 +18,8 @@ import logging
 import mrcnn.model as modellib
 from mrcnn import visualize
 import road_train
-from sample_create_main import TIF_TRANS
+from road_sample_create_main import TIF_TRANS
+
 # Root directory of the project
 ROOT_DIR = os.path.abspath("./")
 sys.path.append(ROOT_DIR)  # To find local version of the library
@@ -59,10 +60,10 @@ class Patch_Verify(object):
         self.model = model
         self.class_names = class_names
         self.ouput_path = output_path
-        self.all_patch_res_path = os.path.join(output_path,'a_all_patch_res.csv')
-        self.filter_patch_res_path = os.path.join(output_path,'a_filter_patch_res.csv')
-        self.culster_png = os.path.join(output_path,'a_Clustering.png')
-        self.culster_csv = os.path.join(output_path,'a_Clustering.csv')
+        self.all_patch_res_path = os.path.join(output_path, 'a_all_patch_res.csv')
+        self.filter_patch_res_path = os.path.join(output_path, 'a_filter_patch_res.csv')
+        self.culster_png = os.path.join(output_path, 'a_Clustering.png')
+        self.culster_csv = os.path.join(output_path, 'a_Clustering.csv')
 
     def center_point(self, points, w, h):
         '''center_point 计算提取坐标的实际坐标的差值 '''
@@ -91,7 +92,7 @@ class Patch_Verify(object):
             img_path = os.path.join(images_path, image_name)
             # image = Image.open(imgpath).convert('RGB')
             image = skimage.io.imread(img_path)
-            if len(image.shape)==2:
+            if len(image.shape) == 2:
                 image = image[:, :, np.newaxis]
                 image = np.concatenate((image, image, image), axis=2)
             w, h, _ = image.shape  # w = 400,h = 400
@@ -103,8 +104,8 @@ class Patch_Verify(object):
             dis, offset_xy = self.center_point(r['rois'], w, h)
             m = re.match(r'(\d+)_(\d+)_(\d+).jpg', image_name)
             row_point, col_point = int(m.group(2)), int(m.group(3))
-            x_before, y_before = tif_tans.imagexy2geo(row_point, col_point)
-            x_after, y_after = tif_tans.imagexy2geo(row_point + offset_xy[0], col_point + offset_xy[1])
+            x_before, y_before = tif_tans.imagexy2geo(col_point, row_point)
+            x_after, y_after = tif_tans.imagexy2geo(col_point + offset_xy[1], row_point + offset_xy[0])
             temp = [offset_xy[0], offset_xy[1], dis, x_before, y_before, x_after, y_after, img_path]
             res.append(temp)
             temp_str = [str(val) for val in temp]
@@ -119,10 +120,9 @@ class Patch_Verify(object):
         filter_patch_res = all_patch_res[cluster_res['jllable'] == 0]
         filter_patch_res.to_csv(self.filter_patch_res_path)
 
-
-
     def culster(self, cluster_data):
-        res_dbscan = DBSCAN(eps=10, min_samples=5).fit(cluster_data)  # eps： DBSCAN算法参数，即我们的𝜖ϵ-邻域的距离阈值，和样本距离超过𝜖ϵ的样本点不在𝜖ϵ-邻域内。
+        res_dbscan = DBSCAN(eps=10, min_samples=5).fit(
+            cluster_data)  # eps： DBSCAN算法参数，即我们的𝜖ϵ-邻域的距离阈值，和样本距离超过𝜖ϵ的样本点不在𝜖ϵ-邻域内。
         cluster_data['jllable'] = res_dbscan.labels_
         ##可视化
         plt.cla()
@@ -133,12 +133,12 @@ class Patch_Verify(object):
         plt.gcf().savefig(self.culster_png)
         # plt.show()
         return cluster_data
-    def qucik_culster(self,dp_data):
+
+    def qucik_culster(self, dp_data):
         cluster_res = self.culster(dp_data[['offset_x', 'offset_y']])
         cluster_res.to_csv(self.culster_csv)
         filter_patch_res = dp_data[cluster_res['jllable'] == 0]
         filter_patch_res.to_csv(self.filter_patch_res_path)
-
 
 
 if __name__ == '__main__':
@@ -161,4 +161,3 @@ if __name__ == '__main__':
     # path =r'D:\360download\code_targetdetection\mask_rcnn_road\road_sample\result\20201105_1107_road_verify\a_all_patch_res.csv'
     # patch_res_pd = pd.read_csv(path)
     # cluster_res = patch_veriry.qucik_culster(patch_res_pd)
-

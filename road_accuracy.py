@@ -28,7 +28,7 @@ import logging
 import mrcnn.model as modellib
 from mrcnn import visualize
 import road_train
-from sample_create_main import TIF_TRANS
+from road_sample_create_main import TIF_TRANS
 
 CUR_PATH = r'./'
 TIF_PATH = os.path.join(CUR_PATH, r'tif_and_shp/CJ2.tif')
@@ -44,6 +44,7 @@ MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 # Local path to trained weights file
 COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_road_0020.h5")
 DIS_THRESHOLD = 50
+
 
 # Download COCO trained weights from Releases if needed
 class InferenceConfig(road_train.RoadConfig):
@@ -79,6 +80,19 @@ class Road_Accuracy(object):
         self.culster_csv = os.path.join(output_path, 'a_Clustering.csv')
         self.img_num = 1
 
+    # def geo2lonlat(self, x, y):
+    #     '''
+    #     将投影坐标转为经纬度坐标（具体的投影坐标系由给定数据确定）
+    #     :param dataset: GDAL地理数据
+    #     :param x: 投影坐标x
+    #     :param y: 投影坐标y
+    #     :return: 投影坐标(x, y)对应的经纬度坐标(lon, lat)
+    #     '''
+    #     prosrs, geosrs = getSRSPair(self.dataset)
+    #     ct = osr.CoordinateTransformation(prosrs, geosrs)
+    #     coords = ct.TransformPoint(x, y)
+    #     return coords[:2]
+
     def imagexy2geo(self, row, col):
         '''
             根据GDAL的六参数模型将影像图上坐标（行列号）转为投影坐标或地理坐标（根据具体数据的坐标系统转换）
@@ -113,7 +127,7 @@ class Road_Accuracy(object):
         img = dataset_img.ReadAsArray(0, 0, width, height)  # 获取数据
 
         #  获取当前文件夹的文件个数len,并以len+1命名即将裁剪得到的图像
-        new_name = '{}_{}_{}.jpg'.format(self.img_num,int(x), int(y))
+        new_name = '{}_{}_{}.jpg'.format(self.img_num, int(x), int(y))
         #  裁剪图片,重复率为RepetitionRate
         x_min, x_max = x - x_df, x + crop_size - x_df
         y_min, y_max = y - y_df, y + crop_size - y_df
@@ -127,6 +141,7 @@ class Road_Accuracy(object):
         # 写图像
         try:
             logging.info('crop image name:{}'.format(new_name))
+            self.img_num += 1
             return cropped, new_name
         except:
             return None, None
@@ -186,8 +201,8 @@ class Road_Accuracy(object):
         dis, offset_xy, is_real = self.center_point(r['rois'], w, h)
         m = re.match(r'(\d+)_(\d+)_(\d+).jpg', image_name)
         row_point, col_point = int(m.group(2)), int(m.group(3))
-        x_before, y_before = self.imagexy2geo(row_point, col_point)
-        x_after, y_after = self.imagexy2geo(row_point + offset_xy[0], col_point + offset_xy[1])
+        x_before, y_before = self.imagexy2geo(col_point, row_point)
+        x_after, y_after = self.imagexy2geo(col_point + offset_xy[1], row_point + offset_xy[0])
         temp = [offset_xy[0], offset_xy[1], dis, x_before, y_before, x_after, y_after, is_real, img_path]
         res.append(temp)
         temp_str = [str(val) for val in temp]
@@ -195,7 +210,7 @@ class Road_Accuracy(object):
 
     def culster(self, cluster_data):
         res_dbscan = DBSCAN(eps=20, min_samples=5).fit(
-                cluster_data)  # eps： DBSCAN算法参数，即我们的𝜖ϵ-邻域的距离阈值，和样本距离超过𝜖ϵ的样本点不在𝜖ϵ-邻域内。
+            cluster_data)  # eps： DBSCAN算法参数，即我们的𝜖ϵ-邻域的距离阈值，和样本距离超过𝜖ϵ的样本点不在𝜖ϵ-邻域内。
         cluster_data['jllable'] = res_dbscan.labels_
         ##可视化
         plt.cla()
@@ -225,7 +240,7 @@ if __name__ == '__main__':
     road_accuracy = Road_Accuracy(tif_path=tif_path, shp_path=shp_path, output_path=output_path, model=model,
                                   class_names=class_names)
     crop_size = CROP_SIZE
-    accuracy,filter_accuracy=road_accuracy.get_accuracy(crop_size=crop_size)
+    accuracy, filter_accuracy = road_accuracy.get_accuracy(crop_size=crop_size)
     print('accuracy:{},filter_accuracy:{}'.format(accuracy, filter_accuracy))
 
     # all_path = r'D:\360download\code_targetdetection\road_sample\result\20201110_1650_road_accuracy\a_all_patch_res.csv'
