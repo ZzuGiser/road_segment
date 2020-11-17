@@ -122,7 +122,7 @@ class TIF_HANDLE(object):
 
 
 class SHP_HANDLE(object):
-    def __init__(self, shp_path=SHP_PATH, via_region_data=VIA_REGION_DATA,samples_num = ALL_IMAGE_NUM):
+    def __init__(self, shp_path=SHP_PATH, via_region_data=VIA_REGION_DATA, samples_num=ALL_IMAGE_NUM):
         self.shp_path = shp_path
         self.data = gpd.read_file(shp_path)
         self.via_region_data = via_region_data
@@ -152,6 +152,9 @@ class SHP_HANDLE(object):
                 p_x = p_x - row + 0.5 * crop_size
                 points_x.append(int(p_y))
                 points_y.append(int(p_x))
+            if min(points_x) < 0 or min(points_y) < 0 or max(points_x) > crop_size or max(points_y) > crop_size:
+                os.remove(os.path.join(TRAIN_NAME, raster_name))
+                continue
             self.add_train_json(points_x, points_y, crop_size, raster_name)
         with open(train_out_path, 'w') as f:
             json.dump(self.train_json, f)
@@ -203,7 +206,7 @@ if __name__ == '__main__':
         del_file(TRAIN_PATH)
     else:
         os.makedirs(TRAIN_NAME)
-    shp_handle = SHP_HANDLE(shp_path=SHP_PATH, via_region_data=VIA_REGION_DATA,samples_num=ALL_IMAGE_NUM)
+    shp_handle = SHP_HANDLE(shp_path=SHP_PATH, via_region_data=VIA_REGION_DATA, samples_num=ALL_IMAGE_NUM)
     shp_handle.creaate_train_sample(tif_handle=tif_handle, crop_size=CROP_SIZE)
     if VAL_NAME not in os.listdir('./'):
         os.makedirs(VAL_NAME)

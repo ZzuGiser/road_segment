@@ -95,7 +95,7 @@ class BuildingDataset(utils.Dataset):
 
 
         # Train or validation dataset?
-        assert subset in ["train", "val"]
+        assert subset in ["train_building", "val_building"]
         dataset_dir = os.path.join(dataset_dir, subset)
 
         # Load annotations
@@ -173,8 +173,8 @@ class BuildingDataset(utils.Dataset):
                         dtype=np.uint8)
         for i, p in enumerate(info["polygons"]):
             # Get indexes of pixels inside the polygon and set them to 1
-            #rr, cc = skimage.draw.polygon(p['all_points_y'], p['all_points_x'])
-            rr,cc=skimage.draw.rectangle((p['y'], p['x']), extent=(p['height'], p['width']))
+            rr, cc = skimage.draw.polygon(p['all_points_y'], p['all_points_x'])
+            # rr,cc=skimage.draw.rectangle((p['y'], p['x']), extent=(p['height'], p['width']))
             mask[rr, cc, i] = 1
 
         # Return mask, and array of class IDs of each instance. Since we have
@@ -194,12 +194,12 @@ def train(model):
     """Train the model."""
     # Training dataset.
     dataset_train = BuildingDataset()
-    dataset_train.load_building(args.dataset, "train")
+    dataset_train.load_building(args.dataset, "train_building")
     dataset_train.prepare()
 
     # Validation dataset
     dataset_val = BuildingDataset()
-    dataset_val.load_building(args.dataset, "val")
+    dataset_val.load_building(args.dataset, "val_building")
     dataset_val.prepare()
 
     # *** This training schedule is an example. Update to your needs ***
@@ -287,7 +287,7 @@ def detect_and_color_splash(model, image_path=None, video_path=None):
 
 ############################################################
 #  Training
-#  python building_train.py train --dataset=D:\360download\code_targetdetection\Mask_RCNN-master\samples\building --weights=coco
+#  python building_train.py train --dataset=./ --weights=coco
 
 ############################################################
 
