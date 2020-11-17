@@ -19,9 +19,9 @@ import logging
 CUR_PATH = r'./'
 TIF_PATH = os.path.join(CUR_PATH, r'tif_and_shp/image_building/building_test.tif')
 SHP_PATH = os.path.join(CUR_PATH, r'tif_and_shp/shp_building/american_building_test.shp')
-TRAIN_NAME = r'train_building'
+TRAIN_NAME = r'train_building1'
 TRAIN_PATH = os.path.join(CUR_PATH, TRAIN_NAME)
-VAL_NAME = r'val_building'
+VAL_NAME = r'val_building1'
 VAL_PATH = os.path.join(CUR_PATH, VAL_NAME)
 CROP_SIZE = 200
 # ROAD_WINDOW_SIZE = 64
@@ -111,6 +111,8 @@ class TIF_HANDLE(object):
                 cropped = img[:, int(y_min): int(y_max),
                           int(x_min): int(x_max)]
         # 写图像
+        if x_min < 0 or x_max > height or y_min < 0 or y_max > width:
+            return None
 
         try:
             self.writeTiff(cropped, os.path.join(sava_path, new_name))
@@ -153,7 +155,7 @@ class SHP_HANDLE(object):
                 points_x.append(int(p_y))
                 points_y.append(int(p_x))
             if min(points_x) < 0 or min(points_y) < 0 or max(points_x) > crop_size or max(points_y) > crop_size:
-                os.remove(os.path.join(TRAIN_NAME, raster_name))
+                os.remove(os.path.join(save_path, raster_name))
                 continue
             self.add_train_json(points_x, points_y, crop_size, raster_name)
         with open(train_out_path, 'w') as f:
@@ -211,19 +213,3 @@ if __name__ == '__main__':
     if VAL_NAME not in os.listdir('./'):
         os.makedirs(VAL_NAME)
         get_val()
-
-    # from PIL import Image
-    # import numpy as np
-    #
-    # # import cv2
-    #
-    # im = Image.open("pic.jpg")  # 打开图片
-    # im_array = np.array(im)  # 将图片转化为numpy数组
-    # print(im_array)
-    # img = Image.fromarray(im_array).convert('RGB')  # 将数组转化回图片
-    # img.save("out.bmp")  # 将数组保存为图片
-
-    # im = Image.open("pic.jpg")  # 打开图片
-    # im_array = np.array(im)  # 将图片转化为numpy数组
-    # print(im_array)
-    # cv2.imwrite("out_cv2.jpg", im_array)  # 保存图片
