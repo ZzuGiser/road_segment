@@ -28,7 +28,7 @@ sys.path.append(ROOT_DIR)  # To find local version of the library
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 
 # Local path to trained weights file
-COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn__0008.h5")
+COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_building_0020.h5")
 
 
 # Download COCO trained weights from Releases if needed

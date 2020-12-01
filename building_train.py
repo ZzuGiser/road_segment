@@ -47,7 +47,9 @@ from mrcnn import model as modellib, utils
 
 # Path to trained weights file
 COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
-
+#### data path
+TRAIN_DATA_PACK = 'train_building'
+VAL_DATA_PACK = 'val_building'
 # Directory to save logs and model checkpoints, if not provided
 # through the command line argument --logs
 DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
@@ -62,7 +64,7 @@ class BuildingConfig(Config):
     Derives from the base Config class and overrides some values.
     """
     # Give the configuration a recognizable name
-    NAME = ""
+    NAME = "building"
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
@@ -194,12 +196,12 @@ def train(model):
     """Train the model."""
     # Training dataset.
     dataset_train = BuildingDataset()
-    dataset_train.load_building(args.dataset, "train_building")
+    dataset_train.load_building(args.dataset, TRAIN_DATA_PACK)
     dataset_train.prepare()
 
     # Validation dataset
     dataset_val = BuildingDataset()
-    dataset_val.load_building(args.dataset, "val_building")
+    dataset_val.load_building(args.dataset, VAL_DATA_PACK)
     dataset_val.prepare()
 
     # *** This training schedule is an example. Update to your needs ***

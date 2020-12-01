@@ -16,15 +16,16 @@ import json
 from PIL import Image
 import logging
 
-
 CUR_PATH = r'./'
-TIF_PATH = os.path.join(CUR_PATH, r'tif_and_shp/CJ2.tif')
-SHP_PATH = os.path.join(CUR_PATH, r'tif_and_shp/point/Correction.shp')
-TRAIN_PATH = os.path.join(CUR_PATH, "road_image")
+TIF_PATH = os.path.join(CUR_PATH, r'tif_and_shp/image_building/building_test.tif')
+SHP_PATH = os.path.join(CUR_PATH, r'tif_and_shp/shp_building/american_building_test.shp')
+TRAIN_NAME = r'train_road_faster_rcnn'
+TRAIN_PATH = os.path.join(CUR_PATH, TRAIN_NAME)
 CROP_SIZE = 400
 ROAD_WINDOW_SIZE = 64
-TRAIN_DATA = 'train_road_region.txt'
+VIA_REGION_DATA = 'faster_rcnn_road_sample.txt'
 IMAGE_NUM = 0
+ALL_IMAGE_NUM = 10
 
 
 class TIF_TRANS(object):
@@ -74,8 +75,14 @@ class TIF_HANDLE(object):
         return dataset
 
     #  保存tif文件函数
-    def writeTiff(self, im_data, im_geotrans, im_proj, path):
-        im = Image.fromarray(im_data)
+    def writeTiff(self, im_data, path):
+        if len(im_data.shape) == 2:
+            im = Image.fromarray(im_data)
+        else:
+            im = np.concatenate(
+                (im_data[0, :, :, np.newaxis], im_data[1, :, :, np.newaxis], im_data[2, :, :, np.newaxis]), axis=2)
+            im = im.astype(np.uint8)
+            im = Image.fromarray(im).convert('RGB')
         im.save(path)
 
     def tif_crop(self, crop_size, x, y, x_df, y_df):
@@ -83,8 +90,6 @@ class TIF_HANDLE(object):
         dataset_img = self.dataset
         width = dataset_img.RasterXSize
         height = dataset_img.RasterYSize
-        proj = dataset_img.GetProjection()
-        geotrans = dataset_img.GetGeoTransform()
         img = dataset_img.ReadAsArray(0, 0, width, height)  # 获取数据
 
         #  获取当前文件夹的文件个数len,并以len+1命名即将裁剪得到的图像
@@ -97,11 +102,18 @@ class TIF_HANDLE(object):
             cropped = img[int(y_min): int(y_max), int(x_min): int(x_max)]
         # 如果图像是多波段
         else:
-            cropped = img[:, int(y_min): int(y_max),
-                      int(x_min): int(x_max)]
+            if img.shape[0] > 3:
+                cropped = img[0:3, int(y_min): int(y_max),
+                          int(x_min): int(x_max)]
+            else:
+                cropped = img[:, int(y_min): int(y_max),
+                          int(x_min): int(x_max)]
         # 写图像
+        if x_min < 0 or x_max > height or y_min < 0 or y_max > width:
+            return None
+
         try:
-            self.writeTiff(cropped, geotrans, proj, os.path.join(sava_path, new_name))
+            self.writeTiff(cropped, os.path.join(sava_path, new_name))
             self.image_num += 1
             logging.info('crop image name:{}'.format(new_name))
             return new_name
@@ -110,56 +122,37 @@ class TIF_HANDLE(object):
 
 
 class SHP_HANDLE(object):
-    def __init__(self, shp_path=SHP_PATH, via_region_data=VIA_REGION_DATA, road_window_size=ROAD_WINDOW_SIZE):
+    def __init__(self, shp_path=SHP_PATH, via_region_data=VIA_REGION_DATA, road_window_size=ROAD_WINDOW_SIZE,
+                 samples_num=ALL_IMAGE_NUM):
         self.shp_path = shp_path
         self.data = gpd.read_file(shp_path)
         self.via_region_data = via_region_data
+        self.train_samples = []
+        self.samples_num = samples_num
         self.road_window_size = road_window_size
-        self.train_json = {}
 
     def creaate_train_sample(self, tif_handle=TIF_HANDLE(), crop_size=CROP_SIZE):
         tif_path = tif_handle.tif_path
         save_path = tif_handle.save_path
         tif_tran = TIF_TRANS(tif_path)
-        train_out_path = os.path.join(save_path, VIA_REGION_DATA)
-        if os.path.exists(train_out_path):
-            with open(train_out_path, 'r') as fp:
-                self.train_json = json.load(fp)
-        for geo in self.data.geometry:
-            lon, lat = geo.x, geo.y
-            row, col = tif_tran.geo2imagexy(lon, lat)
+        train_out_path = os.path.join(save_path, self.via_region_data)
+        for i, geo in enumerate(self.data.geometry):
+            if i > self.samples_num:
+                break
+            lons, lats = geo.exterior.coords.xy[0], geo.exterior.coords.xy[1]
+            row, col = tif_tran.geo2imagexy(geo.centroid.x, geo.centroid.y)
             x_df, y_df = int(crop_size / 2), int(crop_size / 2)
             raster_name = tif_handle.tif_crop(crop_size, row, col, x_df, y_df)
             if raster_name == None: continue
-            self.add_train_json(x_df, y_df, crop_size, raster_name)
+            sample_path_name = os.path.join(save_path, raster_name)
+            sample_xyc = "{},{},{},{},{}".format(int(x_df - self.road_window_size / 2), int(y_df - self.road_window_size / 2),
+                                  int(x_df + self.road_window_size / 2),int(y_df + self.road_window_size / 2), 1)
+            sample = "{} {}".format(sample_path_name, sample_xyc)
+            self.train_samples.append(sample)
         with open(train_out_path, 'w') as f:
-            json.dump(self.train_json, f)
-
-
-    def add_train_json(self, row, col, crop_size, raster_name):
-        size = crop_size * crop_size
-        geo_id = '{}_{}'.format(raster_name, size)
-        x, y = int(row - self.road_window_size / 2), int(col - self.road_window_size / 2)
-        region_json = {
-            "shape_attributes": {
-                "name": "rect",
-                "x": x,
-                "y": y,
-                "width": self.road_window_size,
-                "height": self.road_window_size
-            },
-            "region_attributes": {
-                "name": "road"
-            }
-        }
-
-        geo_json = {
-            "filename": raster_name,
-            "size": size,
-            "regions": [region_json],
-            "file_attributes": {}
-        }
-        self.train_json.setdefault(geo_id, geo_json)
+            for road_sample in self.train_samples:
+                f.writelines(road_sample)
+                f.writelines("\n")
 
 
 def del_file(path_data):
@@ -172,15 +165,13 @@ def del_file(path_data):
 
 
 if __name__ == '__main__':
-    #  将影像按照矢量道路交叉口点进行裁剪，自动生成训练集
+    # 将影像按照矢量道路交叉口点进行裁剪，自动生成训练集
     logging.basicConfig(level=logging.INFO)
-    tif_handle = TIF_HANDLE(path=TIF_PATH, save_path=TRAIN_PATH)
-
-    if TRAIN_DATA in os.listdir(CUR_PATH):
-        train_path_data = os.path.join(CUR_PATH,TRAIN_DATA)
-        os.remove(train_path_data)
+    tif_handle = TIF_HANDLE(path=TIF_PATH, save_path=os.path.abspath(TRAIN_PATH))
+    road_window_size = ROAD_WINDOW_SIZE
+    if TRAIN_NAME in os.listdir(CUR_PATH):
+        del_file(TRAIN_PATH)
     else:
-        os.makedirs('train')
-    shp_handle = SHP_HANDLE(shp_path=SHP_PATH, via_region_data=VIA_REGION_DATA, road_window_size=ROAD_WINDOW_SIZE)
+        os.makedirs(TRAIN_NAME)
+    shp_handle = SHP_HANDLE(shp_path=SHP_PATH, via_region_data=VIA_REGION_DATA, samples_num=ALL_IMAGE_NUM)
     shp_handle.creaate_train_sample(tif_handle=tif_handle, crop_size=CROP_SIZE)
-

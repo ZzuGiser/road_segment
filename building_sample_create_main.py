@@ -19,9 +19,9 @@ import logging
 CUR_PATH = r'./'
 TIF_PATH = os.path.join(CUR_PATH, r'tif_and_shp/image_building/building_test.tif')
 SHP_PATH = os.path.join(CUR_PATH, r'tif_and_shp/shp_building/american_building_test.shp')
-TRAIN_NAME = r'train_building1'
+TRAIN_NAME = r'train_building'
 TRAIN_PATH = os.path.join(CUR_PATH, TRAIN_NAME)
-VAL_NAME = r'val_building1'
+VAL_NAME = r'val_building'
 VAL_PATH = os.path.join(CUR_PATH, VAL_NAME)
 CROP_SIZE = 200
 # ROAD_WINDOW_SIZE = 64
@@ -150,10 +150,10 @@ class SHP_HANDLE(object):
             points_x, points_y = [], []
             for lon, lat in zip(lons, lats):
                 p_x, p_y = tif_tran.geo2imagexy(lon, lat)
-                p_y = -(p_y - col) + 0.5 * crop_size
+                p_y = p_y - col + 0.5 * crop_size
                 p_x = p_x - row + 0.5 * crop_size
-                points_x.append(int(p_y))
-                points_y.append(int(p_x))
+                points_x.append(int(p_x))
+                points_y.append(int(p_y))
             if min(points_x) < 0 or min(points_y) < 0 or max(points_x) > crop_size or max(points_y) > crop_size:
                 os.remove(os.path.join(save_path, raster_name))
                 continue
