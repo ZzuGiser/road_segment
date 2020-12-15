@@ -15,6 +15,7 @@ val_building/
 train_road/
 val_road/
 via-2.0.8/
+images_building/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

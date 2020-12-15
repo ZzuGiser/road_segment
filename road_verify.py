@@ -19,7 +19,8 @@ import mrcnn.model as modellib
 from mrcnn import visualize
 import road_train
 from road_sample_create_main import TIF_TRANS
-
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 # Root directory of the project
 ROOT_DIR = os.path.abspath("./")
 sys.path.append(ROOT_DIR)  # To find local version of the library
@@ -158,6 +159,6 @@ if __name__ == '__main__':
     patch_veriry = Patch_Verify(images_path=images_path, model=model, class_names=class_names, output_path=output_path)
     patch_veriry.do_detech_roads()
 
-    # path =r'D:\360download\code_targetdetection\mask_rcnn_road\road_sample\result\20201105_1107_road_verify\a_all_patch_res.csv'
+    # path =r'D:\360download\code_targetdetection\mask_rcnn_road\road_sample\result\20201105_1107_road_verify_init\a_all_patch_res.csv'
     # patch_res_pd = pd.read_csv(path)
     # cluster_res = patch_veriry.qucik_culster(patch_res_pd)

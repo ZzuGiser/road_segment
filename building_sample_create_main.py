@@ -27,7 +27,7 @@ CROP_SIZE = 200
 # ROAD_WINDOW_SIZE = 64
 VIA_REGION_DATA = 'via_region_data.json'
 IMAGE_NUM = 0
-ALL_IMAGE_NUM = 100
+ALL_IMAGE_NUM = 300
 
 
 class TIF_TRANS(object):

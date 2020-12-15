@@ -50,7 +50,7 @@ MODEL = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
 MODEL.load_weights(COCO_MODEL_PATH, by_name=True)
 CLASS_NAMES = ['not_defined', 'building']
 
-IMAGE_PATH = './images'
+IMAGE_PATH = './images_building'
 OUTPUT_PATH = os.path.join(ROOT_DIR, 'result')
 
 
@@ -69,6 +69,8 @@ class Patch_Verify(object):
         '''center_point 计算提取坐标的实际坐标的差值 '''
         try:
             dis_list = []
+
+
             offset = []
             for xy in points:
                 y1, x1, y2, x2 = xy
@@ -158,6 +160,6 @@ if __name__ == '__main__':
     patch_veriry = Patch_Verify(images_path=images_path, model=model, class_names=class_names, output_path=output_path)
     patch_veriry.do_detech_buildings()
 
-    # path =r'D:\360download\code_targetdetection\mask_rcnn_road\road_sample\result\20201105_1107_road_verify\a_all_patch_res.csv'
+    # path =r'D:\360download\code_targetdetection\mask_rcnn_road\road_sample\result\20201105_1107_road_verify_init\a_all_patch_res.csv'
     # patch_res_pd = pd.read_csv(path)
     # cluster_res = patch_veriry.qucik_culster(patch_res_pd)
