@@ -36,12 +36,12 @@ import json
 import datetime
 import numpy as np
 import skimage.draw
-
+import skimage.io
 # Root directory of the project
 ROOT_DIR = os.path.abspath("./")
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
-TRAIN_IMAGES_NAME = "train_building1"
+TRAIN_IMAGES_NAME = "train_building"
 TRAIN_IMAGES_PATH = os.path.join(ROOT_DIR, TRAIN_IMAGES_NAME)
 IMAGES_OUT_NAME = "result"
 IMAGES_OUT_PATH = os.path.join(ROOT_DIR, IMAGES_OUT_NAME)
