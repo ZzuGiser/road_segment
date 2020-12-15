@@ -19,7 +19,7 @@ import random
 
 CUR_PATH = r'./'
 TIF_PATH = os.path.join(CUR_PATH, r'tif_and_shp/CJ2.tif')
-SHP_PATH = os.path.join(CUR_PATH, r'tif_and_shp/point/Correction.shp')
+SHP_PATH = os.path.join(CUR_PATH, r'tif_and_shp/point_road/Correction.shp')
 TRAIN_PATH = os.path.join(CUR_PATH, r'train')
 VAL_PATH = os.path.join(CUR_PATH, r'val')
 CROP_SIZE = 400
@@ -89,7 +89,6 @@ class TIF_HANDLE(object):
         img = dataset_img.ReadAsArray(0, 0, width, height)  # 获取数据
 
         #  获取当前文件夹的文件个数len,并以len+1命名即将裁剪得到的图像
-        new_name = '{}_{}_{}.jpg'.format(self.image_num, int(x), int(y))
         #  裁剪图片,重复率为RepetitionRate
         x_min, x_max = x - x_df, x + crop_size - x_df
         y_min, y_max = y - y_df, y + crop_size - y_df
@@ -102,6 +101,9 @@ class TIF_HANDLE(object):
                       int(x_min): int(x_max)]
         # 写图像
         try:
+            color = int(np.sum(cropped) / (crop_size * crop_size))
+            if color < 70: return None
+            new_name = '{}_{}_{}_{}.jpg'.format(self.image_num,str(color), int(x), int(y))
             self.writeTiff(cropped, geotrans, proj, os.path.join(sava_path, new_name))
             self.image_num += 1
             logging.info('crop image name:{}'.format(new_name))
@@ -129,7 +131,7 @@ class SHP_HANDLE(object):
         for geo in self.data.geometry:
             lon, lat = geo.x, geo.y
             row, col = tif_tran.geo2imagexy(lon, lat)
-            x_offest, y_offest = random.randint(-100, 100),random.randint(-100, 100)
+            x_offest, y_offest = random.randint(-100, 100), random.randint(-100, 100)
             x_df, y_df = int(crop_size / 2), int(crop_size / 2)
             row, col = row + x_offest, col + y_offest
             raster_name = tif_handle.tif_crop(crop_size, row, col, x_df, y_df)
