@@ -15,7 +15,7 @@ import gdal
 import json
 from PIL import Image
 import logging
-
+import random
 
 CUR_PATH = r'./'
 TIF_PATH = os.path.join(CUR_PATH, r'tif_and_shp/CJ2.tif')
@@ -129,25 +129,27 @@ class SHP_HANDLE(object):
         for geo in self.data.geometry:
             lon, lat = geo.x, geo.y
             row, col = tif_tran.geo2imagexy(lon, lat)
+            x_offest, y_offest = random.randint(-100, 100),random.randint(-100, 100)
             x_df, y_df = int(crop_size / 2), int(crop_size / 2)
+            row, col = row + x_offest, col + y_offest
             raster_name = tif_handle.tif_crop(crop_size, row, col, x_df, y_df)
             if raster_name == None: continue
-            self.add_train_json(x_df, y_df, crop_size, raster_name)
+            road_size = random.randint(self.road_window_size, int(self.road_window_size * 1.5))
+            x, y = int(x_df - self.road_window_size / 2 - x_offest), int(y_df - self.road_window_size / 2 - y_offest)
+            self.add_train_json(x, y, crop_size, road_size, raster_name)
         with open(train_out_path, 'w') as f:
             json.dump(self.train_json, f)
 
-
-    def add_train_json(self, row, col, crop_size, raster_name):
+    def add_train_json(self, x, y, crop_size, road_size, raster_name):
         size = crop_size * crop_size
         geo_id = '{}_{}'.format(raster_name, size)
-        x, y = int(row - self.road_window_size / 2), int(col - self.road_window_size / 2)
         region_json = {
             "shape_attributes": {
                 "name": "rect",
                 "x": x,
                 "y": y,
-                "width": self.road_window_size,
-                "height": self.road_window_size
+                "width": road_size,
+                "height": road_size
             },
             "region_attributes": {
                 "name": "road"
@@ -171,11 +173,13 @@ def del_file(path_data):
         else:
             del_file(file_data)
 
+
 def get_val():
     tif_handle = TIF_HANDLE(path=TIF_PATH, save_path=VAL_PATH)
     del_file(VAL_PATH)
     shp_handle = SHP_HANDLE(shp_path=SHP_PATH, via_region_data=VIA_REGION_DATA, road_window_size=ROAD_WINDOW_SIZE)
     shp_handle.creaate_train_sample(tif_handle=tif_handle, crop_size=CROP_SIZE)
+
 
 if __name__ == '__main__':
     #  将影像按照矢量道路交叉口点进行裁剪，自动生成训练集
