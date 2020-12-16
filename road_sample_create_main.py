@@ -26,7 +26,7 @@ CROP_SIZE = 400
 ROAD_WINDOW_SIZE = 64
 VIA_REGION_DATA = 'via_region_data.json'
 IMAGE_NUM = 0
-
+ALL_IMAGE_NUM = 100
 
 class TIF_TRANS(object):
     def __init__(self, path=TIF_PATH):
@@ -79,7 +79,7 @@ class TIF_HANDLE(object):
         im = Image.fromarray(im_data)
         im.save(path)
 
-    def tif_crop(self, crop_size, x, y, x_df, y_df):
+    def tif_crop(self, crop_size, x, y):
         sava_path = self.save_path
         dataset_img = self.dataset
         width = dataset_img.RasterXSize
@@ -90,8 +90,9 @@ class TIF_HANDLE(object):
 
         #  获取当前文件夹的文件个数len,并以len+1命名即将裁剪得到的图像
         #  裁剪图片,重复率为RepetitionRate
-        x_min, x_max = x - x_df, x + crop_size - x_df
-        y_min, y_max = y - y_df, y + crop_size - y_df
+        crop_len = int(crop_size/2)
+        x_min, x_max = x - crop_len, x + crop_size - crop_len
+        y_min, y_max = y - crop_len, y + crop_size - crop_len
 
         if (len(img.shape) == 2):
             cropped = img[int(y_min): int(y_max), int(x_min): int(x_max)]
@@ -129,12 +130,14 @@ class SHP_HANDLE(object):
             with open(train_out_path, 'r') as fp:
                 self.train_json = json.load(fp)
         for geo in self.data.geometry:
+            if tif_handle.image_num > ALL_IMAGE_NUM:
+                break
             lon, lat = geo.x, geo.y
             row, col = tif_tran.geo2imagexy(lon, lat)
             x_offest, y_offest = random.randint(-100, 100), random.randint(-100, 100)
             x_df, y_df = int(crop_size / 2), int(crop_size / 2)
             row, col = row + x_offest, col + y_offest
-            raster_name = tif_handle.tif_crop(crop_size, row, col, x_df, y_df)
+            raster_name = tif_handle.tif_crop(crop_size, row, col)
             if raster_name == None: continue
             road_size = random.randint(self.road_window_size, int(self.road_window_size * 1.5))
             x, y = int(x_df - self.road_window_size / 2 - x_offest), int(y_df - self.road_window_size / 2 - y_offest)

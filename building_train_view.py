@@ -29,6 +29,7 @@ Usage: import the module (see Jupyter notebooks for examples), or run from
     # Apply color splash to video using the last weights you trained
     python3 balloon.py splash --weights=last --video=<URL or path to file>
 """
+import cv2
 from PIL import Image
 import os
 import sys
@@ -37,6 +38,7 @@ import datetime
 import numpy as np
 import skimage.draw
 import skimage.io
+
 # Root directory of the project
 ROOT_DIR = os.path.abspath("./")
 # Import Mask RCNN
@@ -60,25 +62,19 @@ class ViewDataset(object):
 
         # Add images
         for a in annotations:
-            rects = [r['shape_attributes'] for r in a['regions']]
-            name = [r['region_attributes']['name'] for r in a['regions']]
-            name_dict = {"building": 1}
-            # name_dict = {"building": 1, "not_defined":2}
-
-            name_id = [name_dict[a] for a in name]
-
-            image_path = os.path.join(dataset_dir, a['filename'])
-            img_out_path = os.path.join(out_path, a['filename'])
-            image = skimage.io.imread(image_path)
-            height, width = image.shape[:2]
-            p = rects[0]
-            mask = np.zeros([height, width],
-                            dtype=np.uint8)
-            rr, cc = skimage.draw.polygon(p['all_points_y'], p['all_points_x'])
-            # rr,cc=skimage.draw.rectangle((p['y'], p['x']), extent=(p['height'], p['width']))
-            mask[rr, cc] = 255
-            im = Image.fromarray(mask)
-            im.save(img_out_path)
+            try:
+                rects = [r['shape_attributes'] for r in a['regions']]
+                image_path = os.path.join(dataset_dir, a['filename'])
+                img_out_path = os.path.join(out_path, a['filename'])
+                image = cv2.imread(image_path)
+                p = rects[0]
+                polygon_points = [[[x, y] for x, y in zip( p['all_points_x'],p['all_points_y'])]]
+                polygon_points = np.array(polygon_points, dtype=np.int32)
+                cv2.polylines(image, polygon_points, 1, 255)
+                cv2.fillPoly(image, polygon_points, 255)
+                cv2.imwrite(img_out_path, image)
+            except Exception as e:
+                print(e)
 
 
 if __name__ == '__main__':

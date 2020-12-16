@@ -37,6 +37,8 @@ import datetime
 import numpy as np
 import skimage.draw
 import skimage.io
+import cv2
+
 # Root directory of the project
 ROOT_DIR = os.path.abspath("./")
 # Import Mask RCNN
@@ -60,25 +62,17 @@ class ViewDataset(object):
 
         # Add images
         for a in annotations:
-            rects = [r['shape_attributes'] for r in a['regions']]
-            name = [r['region_attributes']['name'] for r in a['regions']]
-            name_dict = {"road": 1}
-            # name_dict = {"building": 1, "not_defined":2}
-
-            name_id = [name_dict[a] for a in name]
-
-            image_path = os.path.join(dataset_dir, a['filename'])
-            img_out_path = os.path.join(out_path, a['filename'])
-            image = skimage.io.imread(image_path)
-            height, width = image.shape[:2]
-            p = rects[0]
-            mask = np.zeros([height, width],
-                            dtype=np.uint8)
-            # rr, cc = skimage.draw.polygon(p['all_points_y'], p['all_points_x'])
-            rr,cc=skimage.draw.rectangle((p['y'], p['x']), extent=(p['height'], p['width']))
-            mask[rr, cc] = 255
-            im = Image.fromarray(mask)
-            im.save(img_out_path)
+            try:
+                rects = [r['shape_attributes'] for r in a['regions']]
+                image_path = os.path.join(dataset_dir, a['filename'])
+                img_out_path = os.path.join(out_path, a['filename'])
+                image = cv2.imread(image_path)
+                p = rects[0]
+                x, y, x1, y1 = int(p['x']), int(p['y']), int(p['x'] + p['width']), int(p['y'] + p['height'])
+                cv2.rectangle(image, (x, y), (x1, y1), (0, 255, 0), 2)
+                cv2.imwrite(img_out_path, image)
+            except Exception as e:
+                print(e)
 
 
 if __name__ == '__main__':

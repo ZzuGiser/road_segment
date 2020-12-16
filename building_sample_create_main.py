@@ -27,7 +27,7 @@ CROP_SIZE = 200
 # ROAD_WINDOW_SIZE = 64
 VIA_REGION_DATA = 'via_region_data.json'
 IMAGE_NUM = 0
-ALL_IMAGE_NUM = 300
+ALL_IMAGE_NUM = 50
 
 
 class TIF_TRANS(object):
@@ -139,8 +139,8 @@ class SHP_HANDLE(object):
         if os.path.exists(train_out_path):
             with open(train_out_path, 'r') as fp:
                 self.train_json = json.load(fp)
-        for i, geo in enumerate(self.data.geometry):
-            if i > self.samples_num:
+        for geo in self.data.geometry:
+            if tif_handle.image_num > self.samples_num:
                 break
             lons, lats = geo.exterior.coords.xy[0], geo.exterior.coords.xy[1]
             row, col = tif_tran.geo2imagexy(geo.centroid.x, geo.centroid.y)
