@@ -271,7 +271,7 @@ def save_instances(image, boxes, masks, class_ids, class_names,
     #     plt.show()
 
 
-def add_instances(boxes, masks, class_ids, oLayer, origin_point, tif_tran,shp_i,
+def add_instances(boxes, masks, class_ids, oLayer, origin_point, tif_tran, shp_i,
                   colors=None):
     """
     boxes: [num_instance, (y1, x1, y2, x2, class_id)] in image coordinates.
@@ -316,7 +316,7 @@ def add_instances(boxes, masks, class_ids, oLayer, origin_point, tif_tran,shp_i,
             oFeatureTriangle.SetField(1, 'building')
             ring = ogr.Geometry(ogr.wkbLinearRing)  # 构建几何类型:线
             for point in verts:
-                point = tif_tran.imagexy2geo(origin_point[0] + point[1] - 200, origin_point[1] - point[0] + 200)
+                point = tif_tran.imagexy2geo(origin_point[1] + point[1] - 200, origin_point[0] + point[0] - 200)
                 ring.AddPoint(float(point[0]), float(point[1]))
             yard = ogr.Geometry(ogr.wkbPolygon)  # 构建几何类型:多边形
             yard.AddGeometry(ring)
