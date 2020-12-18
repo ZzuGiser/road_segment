@@ -39,7 +39,8 @@ import skimage.draw
 
 # Root directory of the project
 ROOT_DIR = os.path.abspath("./")
-
+TRAIN_NAME = "train"
+VAL_NAME = "val"
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
 from mrcnn.config import Config
@@ -51,6 +52,7 @@ COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
 # Directory to save logs and model checkpoints, if not provided
 # through the command line argument --logs
 DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
+
 
 ############################################################
 #  Configurations
@@ -93,9 +95,8 @@ class RoadDataset(utils.Dataset):
         self.add_class("road", 1, "road")
         # self.add_class("road", 2, "not_defined")
 
-
         # Train or validation dataset?
-        assert subset in ["train", "val"]
+        assert subset in [TRAIN_NAME, VAL_NAME]
         dataset_dir = os.path.join(dataset_dir, subset)
 
         # Load annotations
@@ -173,8 +174,8 @@ class RoadDataset(utils.Dataset):
                         dtype=np.uint8)
         for i, p in enumerate(info["polygons"]):
             # Get indexes of pixels inside the polygon and set them to 1
-            #rr, cc = skimage.draw.polygon(p['all_points_y'], p['all_points_x'])
-            rr,cc=skimage.draw.rectangle((p['y'], p['x']), extent=(p['height'], p['width']))
+            # rr, cc = skimage.draw.polygon(p['all_points_y'], p['all_points_x'])
+            rr, cc = skimage.draw.rectangle((p['y'], p['x']), extent=(p['height'], p['width']))
             mask[rr, cc, i] = 1
 
         # Return mask, and array of class IDs of each instance. Since we have
@@ -194,12 +195,12 @@ def train(model):
     """Train the model."""
     # Training dataset.
     dataset_train = RoadDataset()
-    dataset_train.load_road(args.dataset, "train")
+    dataset_train.load_road(args.dataset, TRAIN_NAME)
     dataset_train.prepare()
 
     # Validation dataset
     dataset_val = RoadDataset()
-    dataset_val.load_road(args.dataset, "val")
+    dataset_val.load_road(args.dataset, VAL_NAME)
     dataset_val.prepare()
 
     # *** This training schedule is an example. Update to your needs ***
@@ -319,18 +320,18 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Validate arguments
-    if args.command == "train":
+    if args.command == TRAIN_NAME:
         assert args.dataset, "Argument --dataset is required for training"
     elif args.command == "splash":
-        assert args.image or args.video,\
-               "Provide --image or --video to apply color splash"
+        assert args.image or args.video, \
+            "Provide --image or --video to apply color splash"
 
     print("Weights: ", args.weights)
     print("Dataset: ", args.dataset)
     print("Logs: ", args.logs)
 
     # Configurations
-    if args.command == "train":
+    if args.command == TRAIN_NAME:
         config = RoadConfig()
     else:
         class InferenceConfig(RoadConfig):
@@ -338,11 +339,13 @@ if __name__ == '__main__':
             # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
             GPU_COUNT = 1
             IMAGES_PER_GPU = 1
+
+
         config = InferenceConfig()
     config.display()
 
     # Create model
-    if args.command == "train":
+    if args.command == TRAIN_NAME:
         model = modellib.MaskRCNN(mode="training", config=config,
                                   model_dir=args.logs)
     else:
@@ -373,12 +376,13 @@ if __name__ == '__main__':
             "mrcnn_class_logits", "mrcnn_bbox_fc",
             "mrcnn_bbox", "mrcnn_mask"])
     else:
-        model.load_weights(weights_path, by_name=True, exclude=["mrcnn_class_logits", "mrcnn_bbox_fc","mrcnn_bbox", "mrcnn_mask"])
+        model.load_weights(weights_path, by_name=True,
+                           exclude=["mrcnn_class_logits", "mrcnn_bbox_fc", "mrcnn_bbox", "mrcnn_mask"])
 
-        #model.load_weights(weights_path, by_name=True)
+        # model.load_weights(weights_path, by_name=True)
 
     # Train or evaluate
-    if args.command == "train":
+    if args.command == TRAIN_NAME:
         train(model)
     elif args.command == "splash":
         detect_and_color_splash(model, image_path=args.image,

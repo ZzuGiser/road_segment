@@ -17,13 +17,14 @@ import random
 CUR_PATH = r'./'
 TIF_PATH = os.path.join(CUR_PATH, r'tif_and_shp/CJ2.tif')
 SHP_PATH = os.path.join(CUR_PATH, r'tif_and_shp/point_road/Correction.shp')
-TRAIN_PATH = os.path.join(CUR_PATH, r'train')
+TRAIN_PATH = os.path.join(CUR_PATH, r'images')
 VAL_PATH = os.path.join(CUR_PATH, r'val')
 CROP_SIZE = 400
-ROAD_WINDOW_SIZE = 64
+ROAD_WINDOW_SIZE = 80
 VIA_REGION_DATA = 'via_region_data.json'
 IMAGE_NUM = 0
 ALL_IMAGE_NUM = 100
+
 
 class TIF_TRANS(object):
     def __init__(self, path=TIF_PATH):
@@ -87,7 +88,7 @@ class TIF_HANDLE(object):
 
         #  获取当前文件夹的文件个数len,并以len+1命名即将裁剪得到的图像
         #  裁剪图片,重复率为RepetitionRate
-        crop_len = int(crop_size/2)
+        crop_len = int(crop_size / 2)
         x_min, x_max = x - crop_len, x + crop_size - crop_len
         y_min, y_max = y - crop_len, y + crop_size - crop_len
 
@@ -101,7 +102,7 @@ class TIF_HANDLE(object):
         try:
             color = int(np.sum(cropped) / (crop_size * crop_size))
             if color < 70: return None
-            new_name = '{}_{}_{}_{}.jpg'.format(self.image_num,str(color), int(x), int(y))
+            new_name = '{}_{}_{}_{}.jpg'.format(self.image_num, str(color), int(x), int(y))
             self.writeTiff(cropped, geotrans, proj, os.path.join(sava_path, new_name))
             self.image_num += 1
             logging.info('crop image name:{}'.format(new_name))
@@ -132,12 +133,13 @@ class SHP_HANDLE(object):
             lon, lat = geo.x, geo.y
             row, col = tif_tran.geo2imagexy(lon, lat)
             x_offest, y_offest = random.randint(-100, 100), random.randint(-100, 100)
+            x_offest, y_offest = 0, 0
             x_df, y_df = int(crop_size / 2), int(crop_size / 2)
             row, col = row + x_offest, col + y_offest
             raster_name = tif_handle.tif_crop(crop_size, row, col)
             if raster_name == None: continue
             road_size = random.randint(self.road_window_size, int(self.road_window_size * 1.5))
-            x, y = int(x_df - self.road_window_size / 2 - x_offest), int(y_df - self.road_window_size / 2 - y_offest)
+            x, y = int(x_df - road_size / 2 - x_offest), int(y_df - road_size / 2 - y_offest)
             self.add_train_json(x, y, crop_size, road_size, raster_name)
         with open(train_out_path, 'w') as f:
             json.dump(self.train_json, f)

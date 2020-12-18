@@ -113,14 +113,14 @@ class Patch_Verify(object):
             # temp_str = [str(val) for val in temp]
             # logging.info('_'.join(temp_str))
 
-        res_data_frame = pd.DataFrame(res, columns=['offset_x', 'offset_y', 'dis', 'x_before', 'y_before', 'x_after',
-                                                    'y_after', 'img_path'])
-        all_patch_res = res_data_frame[res_data_frame['dis'] != 0]
-        all_patch_res.to_csv(self.all_patch_res_path)
-        cluster_res = self.culster(all_patch_res[['offset_x', 'offset_y']])
-        cluster_res.to_csv(self.culster_csv)
-        filter_patch_res = all_patch_res[cluster_res['jllable'] == 0]
-        filter_patch_res.to_csv(self.filter_patch_res_path)
+        # res_data_frame = pd.DataFrame(res, columns=['offset_x', 'offset_y', 'dis', 'x_before', 'y_before', 'x_after',
+        #                                             'y_after', 'img_path'])
+        # all_patch_res = res_data_frame[res_data_frame['dis'] != 0]
+        # all_patch_res.to_csv(self.all_patch_res_path)
+        # cluster_res = self.culster(all_patch_res[['offset_x', 'offset_y']])
+        # cluster_res.to_csv(self.culster_csv)
+        # filter_patch_res = all_patch_res[cluster_res['jllable'] == 0]
+        # filter_patch_res.to_csv(self.filter_patch_res_path)
 
     def culster(self, cluster_data):
         res_dbscan = DBSCAN(eps=10, min_samples=5).fit(

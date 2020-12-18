@@ -9,6 +9,7 @@ images/
 result/
 tif_and_shp/
 train/
+train_my/
 val/
 train_building/
 val_building/

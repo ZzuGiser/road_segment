@@ -103,8 +103,8 @@ class Patch_Verify(object):
             visualize.save_instances(image, r['rois'], r['masks'], r['class_ids'],
                                      class_names, r['scores'], save_name=image_name, save_path=ouput_path)
             dis, offset_xy = self.center_point(r['rois'], w, h)
-            m = re.match(r'(\d+)_(\d+)_(\d+).jpg', image_name)
-            row_point, col_point = int(m.group(2)), int(m.group(3))
+            m = re.match(r'(\d+)_(\d+)_(\d+)_(\d+).jpg', image_name)
+            row_point, col_point = int(m.group(3)), int(m.group(4))
             x_before, y_before = tif_tans.imagexy2geo(col_point, row_point)
             x_after, y_after = tif_tans.imagexy2geo(col_point + offset_xy[1], row_point + offset_xy[0])
             temp = [offset_xy[0], offset_xy[1], dis, x_before, y_before, x_after, y_after, img_path]

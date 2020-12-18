@@ -61,7 +61,7 @@ TIF_PATH = building_sample_create_main.TIF_PATH
 SHP_PATH = building_sample_create_main.SHP_PATH
 CROP_SIZE = 400
 NEW_SHP_NAME = 'building_detect.shp'
-ALL_NUM = 20
+ALL_NUM = 10000
 
 
 class Remote2Shp(object):
@@ -127,10 +127,10 @@ class Remote2Shp(object):
             # Visualize results
             r = results[0]
             visualize.add_instances(r['rois'], r['masks'], r['class_ids'], oLayer, [row, col], tif_tran,shp_i)
-            img_out_path = os.path.join(self.ouput_path,"{}.jpg".format(str(shp_i)))
-            image = image.astype(np.uint8)
-            image = Image.fromarray(image).convert('RGB')
-            image.save(img_out_path)
+            # img_out_path = os.path.join(self.ouput_path,"{}.jpg".format(str(shp_i)))
+            # image = image.astype(np.uint8)
+            # image = Image.fromarray(image).convert('RGB')
+            # image.save(img_out_path)
         self.oDS.Destroy()
         print("数据集创建完成！\n")
 
