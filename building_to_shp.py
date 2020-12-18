@@ -16,7 +16,7 @@ import building_sample_create_main
 import geopandas as gpd
 import sys
 import io
-
+import cv2
 try:
     from osgeo import gdal
     from osgeo import ogr
@@ -61,6 +61,7 @@ TIF_PATH = building_sample_create_main.TIF_PATH
 SHP_PATH = building_sample_create_main.SHP_PATH
 CROP_SIZE = 400
 NEW_SHP_NAME = 'building_detect.shp'
+ALL_NUM = 20
 
 
 class Remote2Shp(object):
@@ -107,7 +108,9 @@ class Remote2Shp(object):
         oFieldName.SetWidth(100)  # 定义字符长度为100
         oLayer.CreateField(oFieldName, 1)
         tif_tran = TIF_TRANS(self.tif_path)
-        for geo in self.shp_data.geometry:
+        for shp_i, geo in enumerate(self.shp_data.geometry):
+            if shp_i > ALL_NUM:
+                break
             row, col = tif_tran.geo2imagexy(geo.centroid.x, geo.centroid.y)
             x_df, y_df = int(crop_size / 2), int(crop_size / 2)
             raster_crop = self.tif_crop(crop_size, row, col, x_df, y_df)
@@ -123,7 +126,11 @@ class Remote2Shp(object):
             results = model.detect([image], verbose=1)
             # Visualize results
             r = results[0]
-            visualize.add_instances(r['rois'], r['masks'], r['class_ids'], oLayer, [row, col], tif_tran)
+            visualize.add_instances(r['rois'], r['masks'], r['class_ids'], oLayer, [row, col], tif_tran,shp_i)
+            img_out_path = os.path.join(self.ouput_path,"{}.jpg".format(str(shp_i)))
+            image = image.astype(np.uint8)
+            image = Image.fromarray(image).convert('RGB')
+            image.save(img_out_path)
         self.oDS.Destroy()
         print("数据集创建完成！\n")
 
@@ -165,7 +172,7 @@ if __name__ == '__main__':
 
     model = MODEL
     class_names = CLASS_NAMES
-    output_pack = '{:%Y%m%d_%H%M}_building_verify'.format(datetime.datetime.now())
+    output_pack = '{:%Y%m%d_%H%M}_building_to_shp'.format(datetime.datetime.now())
     output_path = os.path.join(OUTPUT_PATH, output_pack)
     if not os.path.exists(output_path):
         os.makedirs(output_path)
