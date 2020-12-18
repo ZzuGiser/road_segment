@@ -6,9 +6,6 @@
 # @Desc  :
 
 import geopandas as gpd
-from matplotlib import pyplot as plt
-# from osgeo import gdal
-# from osgeo import osr
 import numpy as np
 import os
 import gdal
