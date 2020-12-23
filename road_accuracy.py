@@ -42,7 +42,7 @@ sys.path.append(ROOT_DIR)  # To find local version of the library
 # Import COCO config
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 # Local path to trained weights file
-COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_road_0020_copy.h5")
+COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_road_0020.h5")
 DIS_THRESHOLD = 50
 
 
