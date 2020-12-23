@@ -15,8 +15,7 @@ from tkinter.filedialog import askdirectory
 import road_sample_create_main as road_sample
 from tkinter.messagebox import showinfo
 import datetime
-
-from building_sample_create_main import TIF_HANDLE, SHP_HANDLE
+import building_sample_create_main as buiding_sample
 from road_accuracy import Road_Accuracy
 
 road_shp = ""
@@ -28,18 +27,21 @@ building_output = ""
 
 
 def road_fileopen():
+    global road_shp
     road_shp = askopenfilename()
     if road_shp:
         road_v1.set(road_shp)
 
 
 def road_fileopen_1():
+    global road_img
     road_img = askopenfilename()
     if road_img:
         road_v2.set(road_img)
 
 
 def road_fileopen_2():
+    global road_output
     road_output = askdirectory()
     if road_output:
         road_v3.set(road_output)
@@ -74,32 +76,35 @@ def road_get_accuracy():
 
 
 def building_fileopen():
+    global building_shp
     building_shp = askopenfilename()
     if building_shp:
         building_v1.set(building_shp)
 
 
 def building_fileopen_1():
+    global building_img
     building_img = askopenfilename()
     if building_img:
         building_v2.set(building_img)
 
 
 def building_fileopen_2():
+    global building_output
     building_output = askdirectory()
     if building_output:
         building_v3.set(building_output)
 
 
 def building_get_sample():
-    tif_path = road_img
-    shp_path = road_shp
-    output_pack = '{:%Y%m%d_%H%M}_road_accuracy'.format(datetime.datetime.now())
-    output_path = os.path.join(road_output, output_pack)
+    tif_path = building_img
+    shp_path = building_shp
+    output_pack = '{:%Y%m%d_%H%M}_building_sample'.format(datetime.datetime.now())
+    output_path = os.path.join(building_output, output_pack)
     if not os.path.exists(output_path):
         os.makedirs(output_path)
-    tif_handle = TIF_HANDLE(path=tif_path, save_path=output_path)
-    shp_handle = SHP_HANDLE(shp_path=shp_path)
+    tif_handle = buiding_sample.TIF_HANDLE(path=tif_path, save_path=output_path)
+    shp_handle = buiding_sample.SHP_HANDLE(shp_path=shp_path)
     shp_handle.creaate_train_sample(tif_handle=tif_handle)
 
 
@@ -127,12 +132,12 @@ ent = Entry(frame, width=50, textvariable=road_v1).pack(fill=X, side=LEFT)  # x�
 ent = Entry(frame_1, width=50, textvariable=road_v2).pack(fill=X, side=LEFT)  # x方向填充,靠左
 ent = Entry(frame_2, width=50, textvariable=road_v3).pack(fill=X, side=LEFT)  # x方向填充,靠左
 
-btn = Button(frame, width=20, text='矢量文件', font=("宋体", 10), command=road_fileopen).pack(fil=X, padx=10)
-btn_1 = Button(frame_1, width=20, text='影像文件', font=("宋体", 10), command=road_fileopen_1).pack(fil=X, padx=10)
-btn_2 = Button(frame_2, width=20, text='输出', font=("宋体", 10), command=road_fileopen_2).pack(fil=X, padx=10)
+road_btn = Button(frame, width=20, text='矢量文件', font=("宋体", 10), command=road_fileopen).pack(fil=X, padx=10)
+road_btn_1 = Button(frame_1, width=20, text='影像文件', font=("宋体", 10), command=road_fileopen_1).pack(fil=X, padx=10)
+road_btn_2 = Button(frame_2, width=20, text='输出', font=("宋体", 10), command=road_fileopen_2).pack(fil=X, padx=10)
 
-ext = Button(frame1, width=10, text='样本制作', font=("宋体", 10), command=road_get_sample).pack(fill=X, side=LEFT)
-etb = Button(frame1, width=10, text='精度检测', font=("宋体", 10), command=road_get_accuracy).pack(fill=Y, padx=10)
+road_ext = Button(frame1, width=10, text='样本制作', font=("宋体", 10), command=road_get_sample).pack(fill=X, side=LEFT)
+road_etb = Button(frame1, width=10, text='精度检测', font=("宋体", 10), command=road_get_accuracy).pack(fill=Y, padx=10)
 
 # 定义第二个容器
 frame_right = LabelFrame(frameT, text="建筑物测试项", labelanchor="n")
@@ -154,10 +159,10 @@ ent = Entry(frame, width=50, textvariable=building_v1).pack(fill=X, side=LEFT)  
 ent = Entry(frame_1, width=50, textvariable=building_v2).pack(fill=X, side=LEFT)  # x方向填充,靠左
 ent = Entry(frame_2, width=50, textvariable=building_v3).pack(fill=X, side=LEFT)  # x方向填充,靠左
 
-btn = Button(frame, width=20, text='矢量文件', font=("宋体", 10), command=building_fileopen).pack(fil=X, padx=10)
-btn_1 = Button(frame_1, width=20, text='影像文件', font=("宋体", 10), command=building_fileopen_1).pack(fil=X, padx=10)
-btn_2 = Button(frame_2, width=20, text='输出', font=("宋体", 10), command=building_fileopen_2).pack(fil=X, padx=10)
+building_btn = Button(frame, width=20, text='矢量文件', font=("宋体", 10), command=building_fileopen).pack(fil=X, padx=10)
+building_btn_1 = Button(frame_1, width=20, text='影像文件', font=("宋体", 10), command=building_fileopen_1).pack(fil=X, padx=10)
+building_btn_2 = Button(frame_2, width=20, text='输出', font=("宋体", 10), command=building_fileopen_2).pack(fil=X, padx=10)
 
-ext = Button(frame1, width=10, text='样本制作', font=("宋体", 10), command=match).pack(fill=X, side=LEFT)
+building_ext = Button(frame1, width=10, text='样本制作', font=("宋体", 10), command=building_get_sample).pack(fill=X, side=LEFT)
 
 frameT.mainloop()

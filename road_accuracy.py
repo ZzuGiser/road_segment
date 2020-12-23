@@ -54,31 +54,32 @@ class InferenceConfig(road_train.RoadConfig):
     IMAGES_PER_GPU = 1
 
 
-config = InferenceConfig()
-config.display()
-# Create model object in inference mode.
-MODEL = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
-# Load weights trained on MS-COCO
-MODEL.load_weights(COCO_MODEL_PATH, by_name=True)
+
 CLASS_NAMES = ['not_defined', 'Road']
 
 
 class Road_Accuracy(object):
-    def __init__(self, tif_path=TIF_PATH, shp_path=SHP_PATH, output_path=OUTPUT_PATH, model=MODEL,
+    def __init__(self, tif_path=TIF_PATH, shp_path=SHP_PATH, output_path=OUTPUT_PATH,
                  class_names=CLASS_NAMES):
         gdal.AllRegister()
+
         self.tif_path = tif_path
         self.dataset = self.readTif(tif_path)
         self.shp_path = shp_path
         self.shp_data = gpd.read_file(shp_path)
         self.save_path = output_path
-        self.model = model
         self.class_names = class_names
         self.all_patch_res_path = os.path.join(output_path, 'a_all_patch_res.csv')
         self.filter_patch_res_path = os.path.join(output_path, 'a_filter_patch_res.csv')
         self.culster_png = os.path.join(output_path, 'a_Clustering.png')
         self.culster_csv = os.path.join(output_path, 'a_Clustering.csv')
         self.img_num = 1
+        config = InferenceConfig()
+        config.display()
+        # Create model object in inference mode.
+        self.model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
+        # Load weights trained on MS-COCO
+        self.model.load_weights(COCO_MODEL_PATH, by_name=True)
 
     # def geo2lonlat(self, x, y):
     #     '''
@@ -226,7 +227,6 @@ class Road_Accuracy(object):
 if __name__ == '__main__':
     tif_path = TIF_PATH
     shp_path = SHP_PATH
-    model = MODEL
     class_names = CLASS_NAMES
     output_pack = '{:%Y%m%d_%H%M}_road_accuracy'.format(datetime.datetime.now())
     output_path = os.path.join(OUTPUT_PATH, output_pack)
@@ -237,16 +237,8 @@ if __name__ == '__main__':
                         datefmt='%a, %d %b %Y %H:%M:%S',
                         filename=os.path.join(output_path, 'a_reslut.log'),
                         filemode='w')
-    road_accuracy = Road_Accuracy(tif_path=tif_path, shp_path=shp_path, output_path=output_path, model=model,
+    road_accuracy = Road_Accuracy(tif_path=tif_path, shp_path=shp_path, output_path=output_path,
                                   class_names=class_names)
     crop_size = CROP_SIZE
     accuracy, filter_accuracy = road_accuracy.get_accuracy(crop_size=crop_size)
     print('accuracy:{},filter_accuracy:{}'.format(accuracy, filter_accuracy))
-
-    # all_path = r'D:\360download\code_targetdetection\road_sample\result\20201110_1650_road_accuracy\a_all_patch_res.csv'
-    # filter_apth = r'D:\360download\code_targetdetection\road_sample\result\20201110_1650_road_accuracy\a_filter_patch_res.csv'
-    # all_patch_res = pd.read_csv(all_path)
-    # filter_patch_res = pd.read_csv(filter_apth)
-    # accuracy = len(all_patch_res[all_patch_res['is_real']]) / float(len(all_patch_res) + 0.1)
-    # filter_accuracy = len(filter_patch_res[filter_patch_res['is_real']]) / float(len(filter_patch_res) + 0.1)
-    # print('accuracy:{},filter_accuracy:{}'.format(accuracy, filter_accuracy))
