@@ -192,13 +192,29 @@ class GetIntersection(object):
 
 
 if __name__ == '__main__':
-    output_pack = '{:%Y%m%d_%H%M}_intersection_to_shp'.format(datetime.datetime.now())
-    output_path = os.path.join(OUT_PACK, output_pack)
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-    logging.basicConfig(level=logging.INFO)
-    intersection_generate = GetIntersection(outpath=output_path)
-    intersection_generate.get_intersection()
+    pack_path = r'H:\test-data\gz_control_point\osm_shp_filter'
+    for shp_file in os.listdir(pack_path):
+        if os.path.splitext(shp_file)[-1] =='.shp':
+            shp_path = os.path.join(pack_path,shp_file)
+            layer_name = os.path.splitext(shp_file)[0]
+            output_pack = '{:%Y%m%d_%H%M}_{}_intersection_point_shp'.format(datetime.datetime.now(),layer_name)
+            output_path = os.path.join(OUT_PACK, output_pack)
+            if not os.path.exists(output_path):
+                os.makedirs(output_path)
+            logging.basicConfig(level=logging.INFO)
+            intersection_generate = GetIntersection(shp_path=shp_path, outpath=output_path)
+            intersection_generate.layer_name = layer_name
+            intersection_generate.get_intersection()
+
+    # output_pack = '{:%Y%m%d_%H%M}_intersection_to_shp'.format(datetime.datetime.now())
+    # output_path = os.path.join(OUT_PACK, output_pack)
+    # if not os.path.exists(output_path):
+    #     os.makedirs(output_path)
+    # logging.basicConfig(level=logging.INFO)
+    # intersection_generate = GetIntersection(outpath=output_path)
+    # intersection_generate.get_intersection()
+
+
     # PL1 = ((-1, -1), (1, -1), (1, 2))
     # PL2 = ((0, 1), (2, 1))
     # print(poly_intersection(PL1, PL2))
